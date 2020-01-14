@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zcp-block-storage-backup
+data:
+  azure-backup.sh: |
+    ########################## SETTING ##########################
+    CREATE_DAY=`date +%Y-%m-%d`
+    DELETE_DAY=`date -d -3day +%Y-%m-%d`
+    
+    ########################## AZ Login ##########################
+    echo -e "######## az login : "$AZURE_ID" ########"
+    az login -u "$AZURE_ID" -p "$AZURE_PWD"
+    echo -e "######## Login Success!!! ########\n"
+    
+    ########################## PV List ##########################
+    PV_LIST[0]="$REGISTRY_MYSQL"
+    PV_LIST[1]="$REGISTRY_POSTGRESQL"
+    PV_LIST[2]="$REGISTRY_ADMINSERVER"
+    PV_LIST[3]="$JENKINS"
+    PV_LIST[4]="$JENKINS_MAVEN"
+    PV_LIST[5]="$GITEA"
+    PV_LIST[6]="$GITEA_POSTGRESQL"
+    PV_LIST[7]="$KEYCLOAK_POSTGRESQL"
+    PV_LIST[8]="$ZCP_ALERTMANAGER"
+    PV_LIST[9]="$GRAFANA"
+    PV_LIST[10]="$PROMETHEUS"
+    PV_LIST[11]="$ES_DATA_0"
+    PV_LIST[11]="$ES_DATA_1"
+    PV_LIST[11]="$ES_DATA_2"
+
+    ########################## snapshot create/delete ##########################
+    i=0
+    while [ $i -lt ${#PV_LIST[@]} ]
+    do        
+        echo -e "kubectl get persistentvolumeclaims "${PV_LIST[$i]}" -o jsonpath='{.spec.volumeName}'"
+        PV_NAME=$(kubectl get persistentvolumeclaims "${PV_LIST[$i]}" -o jsonpath='{.spec.volumeName}')
+        if [ $? -eq 0 ]
+        then
+          echo -e "####### ${PV_LIST[$i]} PV Name is $PV_NAME #######\n"
+        
+          echo -e "kubectl get persistentvolume $PV_NAME -o jsonpath='{.spec.azureDisk.diskURI}'"
+          DISK_URI=$(kubectl get persistentvolume $PV_NAME -o jsonpath='{.spec.azureDisk.diskURI}')
+          if [ $? -eq 0 ]
+          then
+            echo -e "####### ${PV_LIST[$i]} Disk URI is $DISK_URI #######\n"
+          
+            echo -e "######## ${PV_LIST[$i]} NEW snapshot create : "${PV_LIST[$i]}"_"$CREATE_DAY" ########"
+            echo -e "az snapshot create --resource-group $RESOURCE_GROUP --name "${PV_LIST[$i]}"_"$CREATE_DAY" --source $DISK_URI"
+            az snapshot create --resource-group $RESOURCE_GROUP --name "${PV_LIST[$i]}"_"$CREATE_DAY" --source $DISK_URI
+            if [ $? -eq 0 ]
+            then
+              echo -e "######## CREATED !!! #######"
+              echo -e "######## End of ${PV_LIST[$i]} Create behavior ########\n"
+             
+              echo -e "######## $PV OLD snapshot delete : "${PV_LIST[$i]}"_"$DELETE_DAY" ########"
+              echo -e "az snapshot list --resource-group $RESOURCE_GROUP | grep -m 1 "${PV_LIST[$i]}"_"$DELETE_DAY""
+              az snapshot list --resource-group $RESOURCE_GROUP | grep -m 1 "${PV_LIST[$i]}"_"$DELETE_DAY"
+              if [ $? -eq 0 ]
+              then
+                echo -e "Deleting..."
+                echo -e "az snapshot delete --resource-group $RESOURCE_GROUP --name "${PV_LIST[$i]}"_"$DELETE_DAY""
+                az snapshot delete --resource-group $RESOURCE_GROUP --name "${PV_LIST[$i]}"_"$DELETE_DAY"
+                if [ $? -eq 0 ]
+                then
+                  echo -e "######## DELETED !!! #######"
+                else
+                  echo -e "######## "${PV_LIST[$i]}"_"DELETE_DAY$" snapshot is NOT DELETED !!! ########"
+                fi
+              else
+                echo -e "######## "${PV_LIST[$i]}"_"$DELETE_DAY" snapshot is NOT EXIST !!! ########"
+              fi
+                echo -e "######## End of ${PV_LIST[$i]} Delete behavior ########\n"
+            else
+              echo -e "######## "${PV_LIST[$i]}"_"$CREATE_DAY" snapshot is NOT CREATED !!! ########"
+              echo -e "######## End of ${PV_LIST[$i]} Create behavior ########\n"
+            fi
+          else
+            echo -e "####### ${PV_LIST[$i]} Disk URI is NOT EXIST !!! #######\n"
+           fi
+        
+        else
+          echo -e "####### ${PV_LIST[$i]} PV is NOT EXIST !!! #######\n"
+        fi
+
+        i=`expr $i + 1` 
+    done

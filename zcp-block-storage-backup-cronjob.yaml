@@ -1,0 +1,97 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: zcp-block-storage-backup
+  namespace: zcp-system
+spec:
+  schedule: "30 14 * * *"
+  successfulJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: beta.kubernetes.io/arch
+                    operator: In
+                    values:
+                    - amd64
+                  - key: role
+                    operator: In
+                    values:
+                    - management
+          containers:
+          - name: snapshot-backup
+            image: registry.au-syd.bluemix.net/cloudzcp/alpine-coreutils:1.1
+            args:
+            - /bin/bash
+            - -c
+            - /backup/scripts/azure-backup.sh
+            env:
+            - name: AZURE_ID
+              valueFrom:
+                secretKeyRef:
+                  key: azureID
+                  name: zcp-block-storage-backup-secret
+            - name: AZURE_PWD
+              valueFrom:
+                secretKeyRef:
+                  key: azurePWD
+                  name: zcp-block-storage-backup-secret
+            - name: RESOURCE_GROUP
+              value:    # Change
+            - name: REGISTRY_MYSQL
+              value: mysql-data-zcp-registry-harbor-mysql-0
+            - name: REGISTRY_POSTGRESQL
+              value: zcp-registry-postgresql
+            - name: REGISTRY_ADMINSERVER
+              value: adminserver-config-zcp-registry-harbor-adminserver-0
+            - name: JENKINS
+              value: zcp-jenkins
+            - name: JENKINS_MAVEN
+              value: zcp-jenkins-mvn-repo
+            - name: GITEA
+              value: zcp-gitea
+            - name: GITEA_POSTGRESQL
+              value: zcp-gitea-postgres
+            - name: KEYCLOAK_POSTGRESQL
+              value: zcp-oidc-postgresql
+            - name: ZCP_ALERTMANAGER
+              value: zcp-alertmanager-store-data
+            - name: GRAFANA
+              value: grafana-data
+            - name: PROMETHEUS
+              value: prometheus-data
+            - name: ES_DATA_0
+              value: elasticsearch-data-elasticsearch-data-0
+            - name: ES_DATA_1
+              value: elasticsearch-data-elasticsearch-data-1
+            - name: ES_DATA_2
+              value: elasticsearch-data-elasticsearch-data-2
+            volumeMounts:
+            - mountPath: /backup
+              name: backup-dir
+            - mountPath: /backup/scripts
+              name: backup-scripts-config
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+          restartPolicy: OnFailure
+          volumes:
+          - emptyDir: {}
+            name: backup-dir
+          - configMap:
+              defaultMode: 493
+              name: zcp-block-storage-backup
+            name: backup-scripts-config
+          tolerations:
+          - effect: NoSchedule
+            key: management
+            operator: Equal
+            value: "true"
+          serviceAccount: zcp-system-admin
+          serviceAccountName: zcp-system-admin
