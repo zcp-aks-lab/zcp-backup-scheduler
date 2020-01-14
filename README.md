@@ -3,7 +3,7 @@
 * ### Azure account 입력
 backup하는 snapshot을 생성할 때 사용할 Azure account를 secret에 base64로 encoding해서 입력
   * zcp-block-storage-backup-secret.yaml
-   # Change 부분에 삽입
+   Change 부분에 삽입
 ```
 $ vi zcp-block-storage-backup-secret.yaml
   ...
