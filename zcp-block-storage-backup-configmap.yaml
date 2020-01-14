@@ -26,8 +26,8 @@ data:
     PV_LIST[9]="$GRAFANA"
     PV_LIST[10]="$PROMETHEUS"
     PV_LIST[11]="$ES_DATA_0"
-    PV_LIST[11]="$ES_DATA_1"
-    PV_LIST[11]="$ES_DATA_2"
+    PV_LIST[12]="$ES_DATA_1"
+    PV_LIST[13]="$ES_DATA_2"
 
     ########################## snapshot create/delete ##########################
     i=0
