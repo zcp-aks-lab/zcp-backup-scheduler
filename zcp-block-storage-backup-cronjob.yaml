@@ -1,7 +1,7 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: zcp-block-storage-backup
+  name: zcp-backup-scheduler
   namespace: zcp-system
 spec:
   schedule: "30 14 * * *"
@@ -35,14 +35,14 @@ spec:
               valueFrom:
                 secretKeyRef:
                   key: azureID
-                  name: zcp-block-storage-backup-secret
+                  name: zcp-backup-scheduler-secret
             - name: AZURE_PWD
               valueFrom:
                 secretKeyRef:
                   key: azurePWD
-                  name: zcp-block-storage-backup-secret
+                  name: zcp-backup-scheduler-secret
             - name: RESOURCE_GROUP
-              value:    # Change
+              value: MC_ERS-DEV-RG_cloudzcp-skn-ers-dev_koreacentral   # Change
             - name: REGISTRY_MYSQL
               value: mysql-data-zcp-registry-harbor-mysql-0
             - name: REGISTRY_POSTGRESQL
@@ -51,8 +51,6 @@ spec:
               value: adminserver-config-zcp-registry-harbor-adminserver-0
             - name: JENKINS
               value: zcp-jenkins
-            - name: JENKINS_MAVEN
-              value: zcp-jenkins-mvn-repo
             - name: GITEA
               value: zcp-gitea
             - name: GITEA_POSTGRESQL
@@ -86,7 +84,7 @@ spec:
             name: backup-dir
           - configMap:
               defaultMode: 493
-              name: zcp-block-storage-backup
+              name: zcp-backup-scheduler-config
             name: backup-scripts-config
           tolerations:
           - effect: NoSchedule

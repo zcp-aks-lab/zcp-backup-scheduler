@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: zcp-block-storage-backup
+  name: zcp-backup-scheduler-config
 data:
   azure-backup.sh: |
     ########################## SETTING ##########################
@@ -18,16 +18,15 @@ data:
     PV_LIST[1]="$REGISTRY_POSTGRESQL"
     PV_LIST[2]="$REGISTRY_ADMINSERVER"
     PV_LIST[3]="$JENKINS"
-    PV_LIST[4]="$JENKINS_MAVEN"
-    PV_LIST[5]="$GITEA"
-    PV_LIST[6]="$GITEA_POSTGRESQL"
-    PV_LIST[7]="$KEYCLOAK_POSTGRESQL"
-    PV_LIST[8]="$ZCP_ALERTMANAGER"
-    PV_LIST[9]="$GRAFANA"
-    PV_LIST[10]="$PROMETHEUS"
-    PV_LIST[11]="$ES_DATA_0"
-    PV_LIST[12]="$ES_DATA_1"
-    PV_LIST[13]="$ES_DATA_2"
+    PV_LIST[4]="$GITEA"
+    PV_LIST[5]="$GITEA_POSTGRESQL"
+    PV_LIST[6]="$KEYCLOAK_POSTGRESQL"
+    PV_LIST[7]="$ZCP_ALERTMANAGER"
+    PV_LIST[8]="$GRAFANA"
+    PV_LIST[9]="$PROMETHEUS"
+    PV_LIST[10]="$ES_DATA_0"
+    PV_LIST[10]="$ES_DATA_1"
+    PV_LIST[10]="$ES_DATA_2"
 
     ########################## snapshot create/delete ##########################
     i=0
