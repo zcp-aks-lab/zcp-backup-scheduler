@@ -11,8 +11,9 @@ data:
     ########################## AZ Login ##########################
     echo -e "######## az login : "$AZURE_ID" ########"
     az login -u "$AZURE_ID" -p "$AZURE_PWD"
+    az account set --subscription $SUBSCRIPTION
     echo -e "######## Login Success!!! ########\n"
-    
+
     ########################## PV List ##########################
     PV_LIST[0]="$REGISTRY_MYSQL"
     PV_LIST[1]="$REGISTRY_POSTGRESQL"

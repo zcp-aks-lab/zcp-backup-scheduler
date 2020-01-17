@@ -41,8 +41,10 @@ spec:
                 secretKeyRef:
                   key: azurePWD
                   name: zcp-backup-scheduler-secret
+            - name: SUBSCRIPTION
+              value:    # Change
             - name: RESOURCE_GROUP
-              value: MC_ERS-DEV-RG_cloudzcp-skn-ers-dev_koreacentral   # Change
+              value:    # Change
             - name: REGISTRY_MYSQL
               value: mysql-data-zcp-registry-harbor-mysql-0
             - name: REGISTRY_POSTGRESQL
